@@ -3,10 +3,11 @@ import os
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import mne
+import pandas as pd
 
 # Directory Variables
-DATA_DIR = "C:/Users/lilli/OneDrive/Documents/BrainToText/doi_10.5061_dryad.x69p8czpq__v9/competitionData/train/"
-SAVE_DIR = "./stanford_data/"
+DATA_DIR = "/Users/alejandro/VSCodeProjects/Data-Collection/raw_data/competitionData/train/"
+SAVE_DIR = "./processed_data/"
 
 # TENTATIVE MAPPING:
 # Mapping will depend on our final decision on which area we want to extract
@@ -87,6 +88,25 @@ def save_eeg_as_edf(eeg_data, sfreq, channel_names, file_path):
     raw = mne.io.RawArray(eeg_data, info)
     raw.export(file_path, fmt='edf', overwrite=True)
     print(f"Saved EDF file to {file_path}")
+    return raw
+    
+def save_eeg_as_csv(raw_data, channel_names, file_path):
+    """
+    saves the eeg data extracted as a csv file
+    
+    input: 
+    raw_data: the raw eeg data
+    channel_names: the name of the channel for the metadata
+    file_path: location to save it
+    
+    output: 
+    n/a
+    """
+    data, times = raw_data[:, :]
+    df = pd.DataFrame(data.T, columns=channel_names)
+    df.insert(0, 'time', times)  # Insert time as first column
+    df.to_csv(file_path, index=False)
+    print(f"Saved CSV file to {file_path}")
 
 def save_clean_trials(trials, sentence_text, save_dir, channel_names):
     """
@@ -105,9 +125,13 @@ def save_clean_trials(trials, sentence_text, save_dir, channel_names):
     os.makedirs(save_dir, exist_ok=True)
     for i, trial_data in enumerate(trials):
         fname = f"trial_{i}.edf"
-        file_path = os.path.join(save_dir, fname)
+        edf_file_path = os.path.join(save_dir, fname)
         sfreq = 50.0
-        save_eeg_as_edf(trial_data.T, sfreq, channel_names, file_path)
+        raw_data = save_eeg_as_edf(trial_data.T, sfreq, channel_names, edf_file_path)
+
+        csv_file_path = os.path.join(save_dir, f"trial_{i}.csv")
+        save_eeg_as_csv(raw_data, channel_names, csv_file_path)
+
         with open(os.path.join(save_dir, f"trial_{i}_label.txt"), 'w') as f:
             sentence = sentence_text[i]
             f.write(sentence)

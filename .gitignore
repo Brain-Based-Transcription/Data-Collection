@@ -1,1 +1,4 @@
 **/stanford_data
+processed_data/
+raw_data/
+.venv/
