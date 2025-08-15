@@ -1,0 +1,6 @@
+**/stanford_data
+**/eeg_segments
+**/keyboard_events
+**/generated_edf
+__pycache__
+.git
